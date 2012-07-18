@@ -112,6 +112,7 @@ PRODUCT_NAME (for deploy, start, stop, restart, undeploy actions) :
   plf          eXo Platform
   plfcom       eXo Platform Community
   plftrial     eXo Platform Trial
+  cldide       eXo Cloud IDE
   android      eXo Mobile Android
 
 PRODUCT_VERSION (for deploy, start, stop, restart, undeploy actions) :
@@ -208,6 +209,13 @@ do_process_cl_params()
             ARTIFACT_ARTIFACTID="exo.platform.packaging.community"
             ARTIFACT_PACKAGING="zip"
             DEPLOYMENT_EXO_PROFILES="-Dexo.profiles=all"
+            DEPLOYMENT_SERVER_SCRIPT="bin/catalina.sh"
+            ;;
+          cldide)
+            ARTIFACT_REPO_GROUP="private"
+            ARTIFACT_GROUPID="org.exoplatform.cloud-ide"
+            ARTIFACT_ARTIFACTID="cloud-admin-packaging-tomcat"
+            ARTIFACT_PACKAGING="zip"
             DEPLOYMENT_SERVER_SCRIPT="bin/catalina.sh"
             ;;
           android)
@@ -487,7 +495,7 @@ do_unpack_server()
   rm -rf $SRV_DIR/$PRODUCT_NAME-$PRODUCT_VERSION
   cp -rf $TMP_DIR/$PRODUCT_NAME-$PRODUCT_VERSION $SRV_DIR/$PRODUCT_NAME-$PRODUCT_VERSION    
   # We search the tomcat directory as the parent of a gatein directory
-  pushd `find $SRV_DIR/$PRODUCT_NAME-$PRODUCT_VERSION -name gatein -maxdepth 4 -mindepth 1 -type d`/.. > /dev/null
+  pushd `find $SRV_DIR/$PRODUCT_NAME-$PRODUCT_VERSION -name webapps -maxdepth 4 -mindepth 1 -type d`/.. > /dev/null
   DEPLOYMENT_DIR=`pwd -P`
   popd > /dev/null  
   DEPLOYMENT_LOG_PATH=$DEPLOYMENT_DIR/logs/catalina.out
@@ -534,6 +542,7 @@ do_patch_server()
   # Install jmx jar
   JMX_JAR_URL="http://archive.apache.org/dist/tomcat/tomcat-6/v6.0.32/bin/extras/catalina-jmx-remote.jar"
   echo "[INFO] Downloading and installing JMX remote lib ..."
+  echo "|${DEPLOYMENT_DIR}|"
   curl ${JMX_JAR_URL} > ${DEPLOYMENT_DIR}/lib/`basename $JMX_JAR_URL`
   if [ ! -e "${DEPLOYMENT_DIR}/lib/"`basename $JMX_JAR_URL` ]; then
     echo "[ERROR] !!! Sorry, cannot download ${JMX_JAR_URL}"
@@ -588,38 +597,40 @@ do_patch_server()
   replace_in_file $DEPLOYMENT_DIR/conf/server.xml "@DB_IDM_NAME@" "${DEPLOYMENT_DATABASE_NAME}"
   echo "[INFO] Done."
 
-  # Reconfigure $DEPLOYMENT_GATEIN_CONF_PATH
+  if [ -e $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH ]; then
+    # Reconfigure $DEPLOYMENT_GATEIN_CONF_PATH
   
-  # Ensure the configuration.properties doesn't have some windows end line characters
-  # '\015' is Ctrl+V Ctrl+M = ^M
-  cp $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.orig
-  tr -d '\015' < $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.orig > $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH  
+    # Ensure the configuration.properties doesn't have some windows end line characters
+    # '\015' is Ctrl+V Ctrl+M = ^M
+    cp $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.orig
+    tr -d '\015' < $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.orig > $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH  
 
-  # First we need to find which patch to apply
-  # We'll try to find it in the directory $ETC_DIR/gatein/ and we'll select it in this order :
-  # $PRODUCT_NAME-$PRODUCT_VERSION-configuration.properties.patch
-  # $PRODUCT_NAME-$PRODUCT_BRANCH-configuration.properties.patch
-  # $PRODUCT_NAME-configuration.properties.patch
-  # configuration.properties.patch
-  #
-  local gatein_patch="$ETC_DIR/gatein/configuration.properties.patch"
-  [ -e "$ETC_DIR/gatein/$PRODUCT_NAME-configuration.properties.patch" ] && gatein_patch="$ETC_DIR/gatein/$PRODUCT_NAME-configuration.properties.patch"
-  [ -e "$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_BRANCH-configuration.properties.patch" ] && gatein_patch="$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_BRANCH-configuration.properties.patch"
-  [ -e "$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_VERSION-configuration.properties.patch" ] && gatein_patch="$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_VERSION-configuration.properties.patch"
-  # Prepare the patch
-  cp $gatein_patch $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.patch
-  echo "[INFO] Applying on $DEPLOYMENT_GATEIN_CONF_PATH the patch $gatein_patch ..."  
-  cp $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.ori
-  patch -l -p0 $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH < $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.patch  
-  cp $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.patched
+    # First we need to find which patch to apply
+    # We'll try to find it in the directory $ETC_DIR/gatein/ and we'll select it in this order :
+    # $PRODUCT_NAME-$PRODUCT_VERSION-configuration.properties.patch
+    # $PRODUCT_NAME-$PRODUCT_BRANCH-configuration.properties.patch
+    # $PRODUCT_NAME-configuration.properties.patch
+    # configuration.properties.patch
+    #
+    local gatein_patch="$ETC_DIR/gatein/configuration.properties.patch"
+    [ -e "$ETC_DIR/gatein/$PRODUCT_NAME-configuration.properties.patch" ] && gatein_patch="$ETC_DIR/gatein/$PRODUCT_NAME-configuration.properties.patch"
+    [ -e "$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_BRANCH-configuration.properties.patch" ] && gatein_patch="$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_BRANCH-configuration.properties.patch"
+    [ -e "$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_VERSION-configuration.properties.patch" ] && gatein_patch="$ETC_DIR/gatein/$PRODUCT_NAME-$PRODUCT_VERSION-configuration.properties.patch"
+    # Prepare the patch
+    cp $gatein_patch $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.patch
+    echo "[INFO] Applying on $DEPLOYMENT_GATEIN_CONF_PATH the patch $gatein_patch ..."  
+    cp $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.ori
+    patch -l -p0 $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH < $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.patch  
+    cp $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH.patched
   
-  replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_JCR_USR@" "${DEPLOYMENT_DATABASE_USER}"
-  replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_JCR_PWD@" "${DEPLOYMENT_DATABASE_USER}"
-  replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_JCR_NAME@" "${DEPLOYMENT_DATABASE_NAME}"
-  replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_IDM_USR@" "${DEPLOYMENT_DATABASE_USER}"
-  replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_IDM_PWD@" "${DEPLOYMENT_DATABASE_USER}"
-  replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_IDM_NAME@" "${DEPLOYMENT_DATABASE_NAME}"
-  echo "[INFO] Done."
+    replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_JCR_USR@" "${DEPLOYMENT_DATABASE_USER}"
+    replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_JCR_PWD@" "${DEPLOYMENT_DATABASE_USER}"
+    replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_JCR_NAME@" "${DEPLOYMENT_DATABASE_NAME}"
+    replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_IDM_USR@" "${DEPLOYMENT_DATABASE_USER}"
+    replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_IDM_PWD@" "${DEPLOYMENT_DATABASE_USER}"
+    replace_in_file $DEPLOYMENT_DIR/$DEPLOYMENT_GATEIN_CONF_PATH "@DB_IDM_NAME@" "${DEPLOYMENT_DATABASE_NAME}"
+    echo "[INFO] Done."
+  fi
 
   # JMX settings
   echo "[INFO] Creating JMX configuration files ..."  
