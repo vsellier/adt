@@ -110,6 +110,7 @@ PRODUCT_NAME (for deploy, start, stop, restart, undeploy actions) :
   ks           eXo Knowledge
   cs           eXo Collaboration
   plf          eXo Platform
+  plfcld       eXo Platform Cloud
   plfcom       eXo Platform Community
   plftrial     eXo Platform Trial
   android      eXo Mobile Android
@@ -199,6 +200,15 @@ do_process_cl_params()
           plftrial)
             ARTIFACT_GROUPID="org.exoplatform.platform"
             ARTIFACT_ARTIFACTID="exo.platform.packaging.trial"
+            ARTIFACT_PACKAGING="zip"
+            DEPLOYMENT_EXO_PROFILES="-Dexo.profiles=all"
+            DEPLOYMENT_SERVER_SCRIPT="bin/catalina.sh"
+            ;;
+          plfcld)
+            ARTIFACT_REPO_GROUP=private
+            ARTIFACT_GROUPID="com.exoplatform.platform.cloud"
+            ARTIFACT_ARTIFACTID="exo-platform-cloud-packaging-tomcat"
+            ARTIFACT_CLASSIFIER="tomcat"
             ARTIFACT_PACKAGING="zip"
             DEPLOYMENT_EXO_PROFILES="-Dexo.profiles=all"
             DEPLOYMENT_SERVER_SCRIPT="bin/catalina.sh"
