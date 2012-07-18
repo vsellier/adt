@@ -112,6 +112,7 @@ PRODUCT_NAME (for deploy, start, stop, restart, undeploy actions) :
   plf          eXo Platform
   plfcom       eXo Platform Community
   plftrial     eXo Platform Trial
+  cldwks       eXo Cloud Workspaces
   android      eXo Mobile Android
 
 PRODUCT_VERSION (for deploy, start, stop, restart, undeploy actions) :
@@ -206,6 +207,14 @@ do_process_cl_params()
           plfcom)
             ARTIFACT_GROUPID="org.exoplatform.platform"
             ARTIFACT_ARTIFACTID="exo.platform.packaging.community"
+            ARTIFACT_PACKAGING="zip"
+            DEPLOYMENT_EXO_PROFILES="-Dexo.profiles=all"
+            DEPLOYMENT_SERVER_SCRIPT="bin/catalina.sh"
+            ;;
+          cldwks)
+            ARTIFACT_GROUPID="com.exoplatform.cloudworkspaces"
+            ARTIFACT_ARTIFACTID="cloud-workspaces-platform-bundle"
+            ARTIFACT_CLASSIFIER="tomcat"
             ARTIFACT_PACKAGING="zip"
             DEPLOYMENT_EXO_PROFILES="-Dexo.profiles=all"
             DEPLOYMENT_SERVER_SCRIPT="bin/catalina.sh"
