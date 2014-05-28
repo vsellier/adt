@@ -196,6 +196,10 @@ initialize_product_settings() {
       env_var "DEPLOYMENT_ADDONS_MANAGER_VERSION" "1.0.0-RC4" #Add-ons Manager to use
 
       env_var "DEPLOYMENT_CRASH_ENABLED" false
+      
+      env_var "DEPLOYMENT_JMXTRANS_ADDON_ENABLED" false
+      configurable_env_var "DEPLOYMENT_JMXTRANS_ADDON_HOST" "graphite.exoplatform.org"
+      configurable_env_var "DEPLOYMENT_JMXTRANS_ADDON_PORT" 2003
 
       configurable_env_var "DEPLOYMENT_ES_EMBEDDED_ENABLED" true
       env_var "DEPLOYMENT_ES_EMBEDDED_PATH_DATA" "gatein/data/"
@@ -555,6 +559,8 @@ initialize_product_settings() {
         env_var DEPLOYMENT_CHAT_MONGODB_NAME "${DEPLOYMENT_CHAT_MONGODB_NAME//./_}"
         env_var DEPLOYMENT_CHAT_MONGODB_NAME "${DEPLOYMENT_CHAT_MONGODB_NAME//-/_}"
       fi
+      # JMXTrans Addon configuration : computes the storage path of data in GRAPHITE
+      env_var "DEPLOYMENT_JMXTRANS_CATEGORY" "${PLF_BRANCH//./_}.${PRODUCT_NAME//./_}.${PRODUCT_VERSION//./_}"
     ;;
     start | stop | restart | undeploy )
     # Mandatory env vars. They need to be defined before launching the script
