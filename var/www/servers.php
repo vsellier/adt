@@ -39,6 +39,7 @@ checkCaches();
             <ul class="nav">
                 <li><a href="/">Home</a></li>
                 <li><a href="/features.php">Features</a></li>
+                <li><a href="/links.php">Links</a></li>
                 <li class="active"><a href="/servers.php">Servers</a></li>
             </ul>
         </div>
